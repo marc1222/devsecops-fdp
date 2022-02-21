@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-scan-ci
+  namespace: devsecops
+  labels:
+    app: security-scan-ci
+data:
+  NODE_ENV: "{{ .Values.securityscanci.env }}"
+  SSO_HOST: "{{ .Values.securityscanci.SSOCAS_HOST }}"
+  SSO_PORT: "{{ .Values.securityscanci.SSOCAS_PORT }}"
+  SSO_CONTEXT: "{{ .Values.securityscanci.SSOCAS_CONTEXT }}"
+  INFLUX_ENDPOINT: "{{ .Values.securityscanci.INFLUX_ENDPOINT }}"
+  INFLUX_DB: "{{ .Values.securityscanci.INFLUX_DB }}"
+

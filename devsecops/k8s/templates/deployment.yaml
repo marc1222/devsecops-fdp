@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: security-scan-ci
+  namespace: devsecops
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        cni.projectcalico.org/ipv4pools: '["serviceoperation-pre-devsecops-pool"]'
+      labels:
+        app: security-scan-ci
+        env: {{ .Values.securityscanci.env }}
+    spec:
+      volumes:
+        - name: scan-ci-reports-vol-{{ .Values.securityscanci.env }}
+          persistentVolumeClaim:
+            claimName: 'scan-ci-reports-discfisic-{{ .Values.securityscanci.env }}'
+        - name: secret-volume
+          secret:
+            secretName: auth-secret
+      containers:
+      - image: docker-dev.artifactory.your_site.es/security-scan-ci/devsecops:{{ .Values.securityscanci.version }}
+        imagePullPolicy: "IfNotPresent"
+        name: security-scan-ci-{{ .Values.securityscanci.env }}
+        resources:
+          requests:
+            memory: {{ .Values.securityscanci.memrequest }}
+            cpu: {{ .Values.securityscanci.cpurequest }}
+          limits:
+            memory: {{ .Values.securityscanci.memlimit }}
+            cpu: {{ .Values.securityscanci.cpulimit }}
+        ports:
+          - name: tcp-port
+            containerPort: 80
+            protocol: TCP
+        volumeMounts:
+          - mountPath: /var/www/Reports
+            name: scan-ci-reports-vol-{{ .Values.securityscanci.env }}
+          - mountPath: /etc/secret-volume
+            name: secret-volume
+            readOnly: true
+        envFrom:
+          - configMapRef:
+              name: security-scan-ci
+      imagePullSecrets:
+      - name: docker-dev
+
+

@@ -1,0 +1,29 @@
+---
+stages:
+  - build
+
+build_image:
+  image: docker-hub.artifactory.your_site.es/docker:latest
+  variables:
+    OSSECPROJECT: "security-scan-ci/ossecscan"
+    OSSECVERSION: "4.5"
+    OSSECPUSH: "false"
+
+    APPSECPROJECT: "security-scan-ci/appsecscan"
+    APPSECVERSION: "4.9"
+    APPSECPUSH: "true"
+
+    WEBPROJECT: "security-scan-ci/devsecops"
+    WEBVERSION: "5.6"
+    WEBPUSH: "false"
+  tags:
+    - YOURsite
+  stage: build
+  only:
+    - tags
+  script:
+    - docker login -u $DOCKER_ARTIFACTORYUSER -p $DOCKER_ARTIFACTORYPASSWORD $DOCKER_ARTIFACTORYURL
+    - if [ $OSSECPUSH == "true" ];then docker build -t $DOCKER_ARTIFACTORYURL/$OSSECPROJECT -t $DOCKER_ARTIFACTORYURL/$OSSECPROJECT:$OSSECVERSION ./os-sec-scan-image && docker push --all-tags $DOCKER_ARTIFACTORYURL/$OSSECPROJECT;fi
+    - if [ $APPSECPUSH == "true" ];then docker build -t $DOCKER_ARTIFACTORYURL/$APPSECPROJECT -t $DOCKER_ARTIFACTORYURL/$APPSECPROJECT:$APPSECVERSION ./app-sec-scan-image && docker push --all-tags $DOCKER_ARTIFACTORYURL/$APPSECPROJECT;fi
+    - if [ $WEBPUSH == "true" ];then docker build -t $DOCKER_ARTIFACTORYURL/$WEBPROJECT -t $DOCKER_ARTIFACTORYURL/$WEBPROJECT:$WEBVERSION ./devsecops/app && docker push --all-tags $DOCKER_ARTIFACTORYURL/$WEBPROJECT;fi
+

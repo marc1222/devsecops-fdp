@@ -1,0 +1,23 @@
+# Gitlab CI_PROJECT_NAME MUST NOT INCLUDE @ CHARACTERS
+stages:
+  - security_scan
+
+sast_scan:
+  image: docker-dev.artifactory.your_site.es/security-scan-ci/appsecscan:latest
+  stage: security_scan
+  variables:
+    SCAN_TYPES: "credscan,depscan,pyhton"
+  tags:
+    - YOURsite
+  script:
+    # Run APP SAST script
+    - /usr/local/appsecscan.sh ${SCAN_TYPES}
+#  artifacts:
+#    when: always
+#    paths:
+#      - APPSecScanReport.html
+#      - report
+#    expire_in: 7 days
+
+
+

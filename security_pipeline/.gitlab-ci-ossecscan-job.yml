@@ -1,0 +1,45 @@
+ossecscan:
+  image: docker-dev.artifactory.your_site.es/security-scan-ci/ossecscan:latest
+  stage: security_scan
+  variables:
+    IMAGE: $PROJECT:${VERSION}
+    DOCKERFILE_PATH: "./relative path" # Relative path from repo folder to Dockerfile (default: current folder = repo root folder)
+
+  tags:
+    - YOURsite
+  #only: - tags
+  script:
+    # Build docker image
+    - docker build -t ${IMAGE} ${DOCKERFILE_PATH}
+    # Run OS security scan script
+    - /usr/local/ossecscan.sh ${IMAGE}
+    # Save docker image (saved as artifact to retrieve image on build&push step)
+    - docker save ${IMAGE} > image/built_image.tar
+  cache:
+    paths:
+      - .trivycache/
+#  artifacts:
+#    when: always
+#    paths:
+#      - image
+#      - OSSecScanReport.html
+#      - report
+#    expire_in: 7 days
+
+# If you build image on  ossecscan step you can save it as artifact and
+# retrieve it on the following build job *docker load* and then, push it
+build:
+  image: docker:stable
+  tags:
+    - YOURsite
+  stage: build
+  only:
+    - tags
+  script:
+    - docker load -i image/built_image.tar
+    - docker login -u ${DOCKER_ARTIFACTORYUSER} -p ${DOCKER_ARTIFACTORYPASSWORD} ${DOCKER_ARTIFACTORYURL}
+    - docker push --all-tags ${DOCKER_ARTIFACTORYURL}/${PROJECT}
+  after_script:
+    - docker logout ${DOCKER_ARTIFACTORYURL}
+  dependencies:
+    - ossecscan

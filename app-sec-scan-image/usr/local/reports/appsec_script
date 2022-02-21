@@ -1,0 +1,180 @@
+<script>
+  var x = document.getElementsByClassName("filter");
+  var i;
+  // i starts at 1 since first data table works properly
+  var chunk = "0"
+  for (i = 1; i < x.length; ++i) {
+    var j;
+    for (j = 0; j < x[i].children.length; ++j) {
+      var child = x[i].children[j];
+      var z;
+      if (child.className == "filter-tag") {
+        var newid = child.getAttribute("id")+chunk;
+        child.setAttribute("id", newid);
+      } else if  (child.className == "filter-nav") {
+        for (z = 0; z < child.children.length; ++z) {
+          var label = child.children[z];
+          var newfor = label.getAttribute("for")+chunk;
+          label.setAttribute("for", newfor);
+        }
+      } else if  (child.className == "filter-body") {
+        var datatable = child.children[0].children[1];
+        for (z = 0; z < datatable.children.length; ++z) {
+          var cell = datatable.children[z];
+          var newdatatag = cell.getAttribute("data-tag")+chunk;
+          cell.setAttribute("data-tag", newdatatag);
+        }
+      }
+    }
+    var style = "<style>\n" +
+                "  .filter .filter-tag#tag-0"+chunk+":checked~.filter-nav .chip[for=tag-0"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-1"+chunk+":checked~.filter-nav .chip[for=tag-1"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-2"+chunk+":checked~.filter-nav .chip[for=tag-2"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-3"+chunk+":checked~.filter-nav .chip[for=tag-3"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-4"+chunk+":checked~.filter-nav .chip[for=tag-4"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-5"+chunk+":checked~.filter-nav .chip[for=tag-5"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-6"+chunk+":checked~.filter-nav .chip[for=tag-6"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-7"+chunk+":checked~.filter-nav .chip[for=tag-7"+chunk+"],\n" +
+                "  .filter .filter-tag#tag-8"+chunk+":checked~.filter-nav .chip[for=tag-8"+chunk+"] {\n" +
+                "background:#5755d9;\n" +
+                "color:#fff }\n" +
+                ".filter .filter-tag#tag-1"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-1"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-2"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-2"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-3"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-3"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-4"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-4"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-5"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-5"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-6"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-6"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-7"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-7"+chunk+"]),\n" +
+                ".filter .filter-tag#tag-8"+chunk+":checked~.filter-body .filter-item:not([data-tag~=tag-8"+chunk+"]) {\n" +
+                "display:none }\n" +
+                "</style>";
+    document.head.insertAdjacentHTML("beforeend", style);
+    chunk += "0";
+  }
+</script>
+
+<script>
+  var x = document.getElementsByClassName("filter");
+  var i;
+  for (i = 0; i < x.length; ++i) {
+    var parent = x[i].parentElement;
+    parent.innerHTML = "<details><summary>Show full vulnerability list</summary>\n" + parent.innerHTML + "</details>";
+  }
+</script>
+<style>
+summary {
+    cursor: pointer;
+    font-size: 125%;
+    padding-left: 0.4rem;
+}
+.json-pretty{
+    max-width: 1296px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: .4rem;
+    padding-right: .4rem;
+}
+* {
+    font-family: Arial, Helvetica, sans-serif
+}
+h1 {
+    text-align: center;
+}
+#depscantable .group-header th {
+    font-size: 200%;
+}
+#depscantable .sub-header th {
+    font-size: 150%;
+}
+#depscantable table, th {
+    border: 1px solid black;
+    border-collapse: collapse;
+    white-space: nowrap;
+    padding: .3em;
+}
+#depscantable td {
+    max-width: 300px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    border: 1px solid black;
+    border-collapse: collapse;
+    white-space: nowrap;
+    padding: .3em;
+}#depscantable table {
+    margin: 0 auto 150px auto;
+}
+#depscantable .severity {
+    text-align: center;
+    font-weight: bold;
+    color: #fafafa;
+}
+.severity-LOW .severity { background-color: #5fbb31; }
+.severity-MEDIUM .severity { background-color: #e9c600; }
+.severity-HIGH .severity { background-color: #ff8800; }
+.severity-CRITICAL .severity { background-color: #e40000; }
+.severity-UNKNOWN .severity { background-color: #747474; }
+.severity-LOW { background-color: #5fbb3160; }
+.severity-MEDIUM { background-color: #e9c60060; }
+.severity-HIGH { background-color: #ff880060; }
+.severity-CRITICAL { background-color: #e4000060; }
+.severity-UNKNOWN { background-color: #74747460; }
+table tr td:first-of-type {
+    font-weight: bold;
+}
+.links a,
+.links[data-more-links=on] a {
+    display: block;
+}
+.links[data-more-links=off] a:nth-of-type(1n+5) {
+    display: none;
+}
+a.toggle-more-links { cursor: pointer; }
+.links2{
+    position: relative;
+    cursor: pointer;
+}
+.links2:hover::before {
+    position: fixed;
+    left: 50%;
+    bottom: 13rem;
+    padding: 10px;
+    background: #000;
+    color: #fff;
+    white-space: pre-wrap;
+    content: attr(data-more);
+    border-radius: 10px;
+    z-index: 300;
+    max-width: 450px;
+}
+body {
+    margin-bottom: 50px;
+}
+</style>
+<script>
+  window.onload = function() {
+    document.querySelectorAll('td.links').forEach(function(linkCell) {
+      var links = [].concat.apply([], linkCell.querySelectorAll('a'));
+      [].sort.apply(links, function(a, b) {
+        return a.href > b.href ? 1 : -1;
+      });
+      links.forEach(function(link, idx) {
+        if (links.length > 3 && 3 === idx) {
+          var toggleLink = document.createElement('a');
+          toggleLink.innerText = "Toggle more links";
+          toggleLink.href="#htmlcat__toggleMore";
+          toggleLink.setAttribute("class", "toggle-more-links");
+          linkCell.appendChild(toggleLink);
+        }
+        linkCell.appendChild(link);
+      });
+    });
+    document.querySelectorAll('a.toggle-more-links').forEach(function(toggleLink) {
+      toggleLink.onclick = function() {
+        var expanded = toggleLink.parentElement.getAttribute("data-more-links");
+        toggleLink.parentElement.setAttribute("data-more-links", "on" === expanded ? "off" : "on");
+        return false;
+      };
+    });
+  };
+</script>
+

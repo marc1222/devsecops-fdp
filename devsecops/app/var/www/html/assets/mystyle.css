@@ -1,0 +1,57 @@
+body,h1,h2,h3,h4,h5,a {font-family: "Lexend Mega", sans-serif}
+h1,h2,h3,h4,h5{ letter-spacing: -0.8px}
+p{ letter-spacing: -1.5px}
+.navbar {
+    margin-bottom: 0;
+    padding: 10px;
+    background-color: black;
+}
+footer {
+    background-color: grey;
+    padding: 6px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+.card {
+    box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05);
+    transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+    cursor: pointer;
+}
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+}
+.breadcrumb {
+    margin-bottom: 25px;
+    border-radius: 10px;
+}
+a.list-group-item-action {
+    border-bottom-width: 4px;
+}
+.mylist {
+    border-radius: 7px;
+    padding: 0.5rem 1rem !important;
+}
+.mylist:hover {
+    background-color: #258eff !important;
+    color: #ffffff !important;
+}
+#list_init {
+    margin-bottom: 30px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 720px;
+}
+#list_init a:nth-child(odd) {
+    background-color: #6cabee;
+    color: #000000;
+}
+#list_init a:nth-child(even) {
+    background-color: #a1cfff;
+    color: #000000;
+}
+#report_new_window:hover {
+    filter: invert(0.2);
+    transform: scale(1.02);
+}

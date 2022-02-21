@@ -1,0 +1,14 @@
+securityscanci:
+  version: "4.8"
+  env: pro
+  memrequest: "128Mi"
+  cpurequest: "250m"
+  memlimit: "250Mi"
+  cpulimit: "500m"
+  # ENV VARAIBLES THAT WILL BE SET IN CONFIGMAP
+  SSOCAS_HOST: "sso.domain.edu"
+  SSOCAS_PORT: "443"
+  SSOCAS_CONTEXT: "/CAS"
+  INFLUX_ENDPOINT: "http://eliot-pre.domain.edu:8086/"
+  INFLUX_DB: "devsecops_stats"
+

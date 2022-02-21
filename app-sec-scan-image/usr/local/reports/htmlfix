@@ -1,0 +1,317 @@
+#!/usr/bin/perl5
+#
+# "htmlfix"	K. J. Turner	21/11/98
+#
+# This script tries to fix major errors in HTML files:
+# 
+#   o missing <html> ... </html>
+# 
+#   o missing <head> ... </head> where an intermediate header tag is found
+# 
+#   o missing <body> ... </body>
+# 
+# Command-line options are:
+# 
+#   -h		print help
+# 
+# The corrected HTML file replaces the current one. 
+# 
+# Examples of usage are:
+# 
+#   htmlfix some.html
+# 
+#   htmlfix *.html
+# 
+# Warning messages are sent to standard error.
+
+######################### Declarations #########################
+
+use Getopt::Std;				# load options package
+
+######################### Main Program #########################
+
+&customise;					# customise script
+&initialise;					# initialise script
+&fix_html;					# fix HTML files
+&finalise;					# finalise script
+
+######################### Subroutines #########################
+
+# customise script
+
+sub customise {
+  $home = $ENV{'HOME'};				# set home directory
+  $tmpdir = "/tmp"				# set temporary directory
+}
+
+# make body end if required
+
+sub end_body {
+  if ($body_tag) {				# no body end?
+    $body_tag = 0;				# note body end
+    &warning ("missing </body>");		# report warning
+    print HOUT "</body>\n\n";			# add body end
+  }
+}
+
+# make frameset end if required
+
+sub end_frame {
+  if ($frame_tag) {				# no frameset end?
+    $frame_tag = 0;				# note frameset end
+    &warning ("missing </frameset>");		# report warning
+    print HOUT "</frameset>\n\n";		# add frameset end
+  }
+}
+
+# make header end if required
+
+sub end_head {
+  if ($head_tag) {				# no header end?
+    $head_tag = 0;				# note header end
+    &warning ("missing </head>");		# report warning
+    print HOUT "</head>\n\n";			# add header end
+  }
+}
+
+# make HTML end if required
+
+sub end_html {
+  if ($html_tag) {				# no HTML end?
+    $html_tag = 0;				# note HTML end
+    &warning ("missing </html>");		# report warning
+    print HOUT "</html>\n\n";			# add HTML end
+  }
+}
+
+# fix HTML files
+
+sub fix_html {
+  local ($fileno);				# locals
+  
+  for ($fileno = 0; $fileno <= $#ARGV; $fileno++) { # process all parameters
+    $file = $ARGV [$fileno];			# get file name
+    if (-l $file) {				# symbolic link file?
+      next;					# ignore it
+    }
+    $lineno = 0;				# file line number
+    $html_tag = 0;				# no HTML start yet
+    $head_tag = 0;				# no header start yet
+    $frame_tag = 0;				# no frameset start yet
+    $body_tag = 0;				# no body start yet
+    if (open (HIN, "< $file")) {		# HTML input opened?
+      if (open (HOUT, "> $tmpfile")) {		# HTML output opened?
+	while (<HIN>) {				# read HTML input till end
+	  $lineno++;				# increment line number
+	  if (/\<(\w+)/) {			# opening tag?
+	    $tag = lc ($1);			# get lower-case tag name
+	    if ($tag eq "html") {		# HTML starts
+	      if ($html_tag) {			# superfluous HTML start?
+	        &warning ("superfluous <html>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first HTML start
+	        $html_tag = 1;			# note HTML start
+	      }
+	    }
+	    elsif ($tag eq "head") {		# head starts
+	      if ($head_tag) {			# superfluous head start?
+	        &warning ("superfluous <head>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first head start
+	        $head_tag = 1;			# note head start
+	        &start_html;			# start HTML if required
+	      }
+	    }
+	    elsif ($tag eq "frameset") {	# frameset starts
+	      if ($frame_tag) {			# existing frameset?
+	        $frame_tag++;			# increment frameset count
+	      }
+	      else {				# first frameset start
+	        $frame_tag++;			# note frameset start
+	        &start_html;			# start HTML if required
+	        &end_head;			# end header if required
+	      }
+	    }
+	    elsif ($tag eq "body") {		# body starts
+	      if ($body_tag) {			# superfluous body start?
+	        &warning ("superfluous <body>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first body start
+	        $body_tag = 1;			# note head start
+	        &start_html;			# start HTML if required
+	        &end_head;			# end header if required
+	      }
+	    }
+	    elsif (($tag eq "base") || ($tag eq "basefont") ||
+	           ($tag eq "isindex") || ($tag eq "link") ||
+		   ($tag eq "meta") || ($tag eq "nextid") ||
+		   ($tag eq "title")) {		# header tag
+	      if ($body_tag) {			# body started?
+	        &warning ("<$tag> not allowed in body"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# body not started
+		&start_html;			# start HTML if required
+		&start_head;			# start header if required
+	      }
+	    }
+	    else {				# ordinary tag
+	      &start_html;			# start HTML if required
+	      &end_head;			# end header if required
+	      &start_body;			# start body if required
+	    }
+	  }
+	  elsif (/\<\/(\w+)/) {			# closing tag?
+	    $tag = lc ($1);			# get lower-case tag name
+	    if ($tag eq "html") {		# HTML ends
+	      if (!$html_tag) {			# superfluous HTML end?
+	        &warning ("superfluous </html>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first HTML end
+	        $html_tag = 0;			# note HTML end
+	        &end_frame;			# end frameset if required
+	        &end_body;			# end body if required
+	      }
+	    }
+	    elsif ($tag eq "head") {		# head ends
+	      if (!$head_tag) {			# duplicate head end?
+	        &warning ("superfluous </head>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first head end
+	        $head_tag = 0;			# note head end
+	      }
+	    }
+	    elsif ($tag eq "frameset") {	# frameset ends
+	      if ($frame_tag) {			# existing frameset?
+	        $frame_tag--;			# decrement frameset count
+	      }
+	      else {				# no frameset to end
+	        &warning ("superfluous </frameset>"); # report warning
+	        next;				# ignore line
+	      }
+	    }
+	    elsif ($tag eq "body") {		# body ends
+	      if (!$body_tag) {			# superfluous body end?
+	        &warning ("superfluous </body>"); # report warning
+		next;				# ignore line
+	      }
+	      else {				# first body end
+	        $body_tag = 0;			# note body end
+	      }
+	    }
+	  }
+	  print HOUT $_;			# output current line
+	}
+	&end_body;				# end body if required
+	&end_frame;				# end frameset if required
+	&end_html;				# end HTML if required
+	if (!close (HOUT)) {			# HTML output not closed?
+	  &warning ("could not close \"$file\""); # report warning
+	}
+	if (!close (HIN)) {			# HTML input not closed?
+	  &warning ("could not close \"$file\""); # report warning
+	}
+	$cmd = "mv $tmpfile $file";		# set rename command
+	if (system ($cmd) != 0) {		# new file not renamed?
+	  &warning ("could not rename \"$tmpfile\" as \"$file\"");
+	}
+      }
+      else {					# could not open output
+	&warning ("could not open \"$file\"");	# report warning
+      }
+    }
+    else {					# could not open input
+      &warning ("could not open \"$file\"");	# report warning
+    }
+  }
+}
+
+# report error and stop
+
+sub error {
+  local ($mess) = @_;				# get error message
+  printf STDERR "$prog: $mess\n";		# print it
+  exit (1);					# exit with result of 1
+}
+
+# finalise and tidy up
+
+sub finalise {
+  exit ($code);					# exit with code
+}
+
+# initialise script and options
+
+sub initialise {
+  $prog = $0;					# set program name
+  $prog =~ s/.*\///g;				# remove directories
+  $code = 0;					# exit code
+  $tmpfile = "$tmpdir/$prog$$";			# set temporary filename
+  $opt_h = 0;					# set no help
+  $SIG{INT} = \&prog_int;			# set interrupt handler
+  $SIG{QUIT} = \&prog_int;			# set interrupt handler
+  if (!getopts ('h')) {				# wrong options?
+    &usage ();					# print usage
+  }
+  if (($opt_h) || ($#ARGV < 0)) {		# help or no files?
+    &usage ();					# print usage
+  }
+}
+
+# handle program interrupt
+
+sub prog_int {
+  &error ("abandoned");				# report interrupt
+}
+
+# make body start if required
+
+sub start_body {
+  if ((!$body_tag) && (!$frame_tag)) {		# no body or frameset start?
+    $body_tag = 1;				# note body start
+    &warning ("missing <body>");		# report warning
+    print HOUT "<body>\n\n";			# add body start
+  }
+}
+
+# make header start if required
+
+sub start_head {
+  if (!$head_tag) {				# no header start?
+    $head_tag = 1;				# note header start
+    &warning ("missing <head>");		# report warning
+    print HOUT "<head>\n\n";			# add header start
+  }
+}
+
+# make HTML start if required
+
+sub start_html {
+  if (!$html_tag) {				# no HTML start?
+    $html_tag = 1;				# note HTML start
+    &warning ("missing <html>");		# report warning
+    print HOUT "<!doctype html public ";	# add document type
+    print HOUT "\"-//ietf//dtd html 2.0//en\">\n\n";
+    print HOUT "<html>\n\n";			# add HTML start
+  }
+}
+
+# print script usage
+
+sub usage {
+  print STDERR "usage: $prog [-h(elp)] html_file ...\n";
+  exit (1);
+}
+
+# report warning
+
+sub warning {
+  local ($mess) = @_;				# get warning message
+  printf STDERR "$prog: file $file, line $lineno, $mess !\n"; # print it
+  $code = 1;					# exit with result of 1
+}

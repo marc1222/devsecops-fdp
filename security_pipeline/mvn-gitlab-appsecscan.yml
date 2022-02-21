@@ -1,0 +1,26 @@
+# Example MVN project, PREPRODUCTION branch .gitlab-ci.yml file
+
+variables:
+  MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -s .m2/settings.xml -Dyour_siteUser=$ARTIFACTORY_YOURSITE_USER -Dyour_sitePassword=$ARTIFACTORY_YOURSITE_PASSWORD"
+  
+  stages:
+  - build
+  - publish
+  - deploy
+  - security-scan # Note that stage is left to final step to prevent adding delay to PREproduction deployment
+
+
+# Gitlab APPSecScan job
+appsecscan:
+  image: docker-dev.artifactory.your_site.es/security-scan-ci/appsecscan:latest
+  stage: security-scan
+  variables:
+    SCAN_TYPES: "credscan,depscan,java,yaml"       # REQUIRED VARIABLE BY SCRIPT - See supported types
+    MVN_ARGS: "$MAVEN_OPTS $MAVEN_CLI_OPTS"        # OPTIONAL but NECESSARY to ALLOW MVN build to fetch artifacts from private registry
+  only:
+    - preproduccio
+  script:
+    - /usr/local/appsecscan.sh ${SCAN_TYPES}    # Run APP security scan script (SAST)
+  tags:
+    - YOURsite           
